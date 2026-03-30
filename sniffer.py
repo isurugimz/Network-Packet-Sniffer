@@ -1,30 +1,21 @@
-import socket
-import struct
+from scapy.all import sniff, IP, TCP, wrpcap
 
-def main():
-    # Make raw socket (Need linux root privileges )
-    conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(3))
+captured_packets = []
 
-    print("Sniffing packets... (Press Ctrl+C to stop)")
+def process_packet(packet):
+    # Check if the packet has an IP layer
+    if packet.haslayer(IP):
+        captured_packets.append(packet)
+        print(f"Captured: {packet[IP].src} --> {packet[IP].dst} | Protocol: {packet.proto}")
 
-    while True:
-        raw_data, addr = conn.recvfrom(65535)
-        
-        # 1. Ethernet Frame decode  (MAC Addresses)
-        dest_mac, src_mac, eth_proto = struct.unpack('! 6s 6s H', raw_data[:14])
-        
-        # IPv4 packets (Protocol 8 mean IPv4)
-        if socket.htons(eth_proto) == 8:
-            # 2. IPv4 Header decode 
-            ip_header = raw_data[14:34]
-            iph = struct.unpack('!BBHHHBBH4s4s', ip_header)
-            
-            src_ip = socket.inet_ntoa(iph[8])
-            dest_ip = socket.inet_ntoa(iph[9])
-            protocol = iph[6] # TCP=6, UDP=17, ICMP=1
-            
-            print(f"Protocol: {protocol} | Source IP: {src_ip} --> Destination IP: {dest_ip}")
+print("Sniffing started... (Press Ctrl+C to stop)")
 
-# Run Command
-if __name__ == "__main__":
-    main()
+try:
+    # Capture 100 packets automatically
+    sniff(prn=process_packet, count=100)
+except KeyboardInterrupt:
+    pass
+
+# Save the captured packets to a .pcap file for Wireshark analysis
+wrpcap('my_traffic.pcap', captured_packets)
+print("\nDone! Results saved to 'my_traffic.pcap'")
