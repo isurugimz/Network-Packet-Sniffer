@@ -21,5 +21,3 @@ A Python-based tool to capture and analyze live network traffic.
    `git clone https://github.com/YOUR_USERNAME/Network-Packet-Sniffer.git`
 2. Run with root privileges:
    `sudo python3 sniffer.py`/Network-Packet-Sniffer.git`
-2. Run with root privileges:
-   `sudo python3 sniffer.py`
